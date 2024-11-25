@@ -1,0 +1,18 @@
+trigger PersonAccountTrigger on Account (after insert) {
+    if (Trigger.isAfter && Trigger.isInsert) {
+        for (Account acc : Trigger.new) {
+            // Ensure it's a Person Account
+            if (acc.IsPersonAccount) {
+                try {
+                    ProfileEmailSender.sendProfileUpdateEmail(
+                        acc.Id, 
+                        acc.PersonEmail, 
+                        acc.FirstName // Pass the first name
+                    );
+                } catch (Exception e) {
+                    System.debug('Error sending profile update email: ' + e.getMessage());
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,109 @@
+public without sharing class ProfileController {
+    @AuraEnabled(cacheable=true)
+    public static String getProfileData(String secureToken) {
+        System.debug('Received secure token: ' + secureToken);
+
+        if (String.isEmpty(secureToken)) {
+            System.debug('Secure token is null or empty.');
+            throw new AuraHandledException('Secure token cannot be null or empty');
+        }
+
+        try {
+            // Decode the secure token to get the Person Account Id
+            Id personAccountId = SecureTokenHandler.decodeSecureToken(secureToken);
+            System.debug('Decoded Person Account ID: ' + personAccountId);
+
+            // Query Account details using the Person Account Id
+            Account account = [
+                SELECT Id, Phone, Date_of_Birth__c, T_Shirt_Size__pc, Shoe_Size__pc
+                FROM Account
+                WHERE Id = :personAccountId
+                LIMIT 1
+            ];
+            System.debug('Retrieved Account: ' + account);
+
+            // Serialize Account fields into JSON and return
+            return JSON.serialize(account);
+        } catch (Exception ex) {
+            System.debug('Error in getProfileData: ' + ex.getMessage());
+            throw new AuraHandledException('Error fetching profile data: ' + ex.getMessage());
+        }
+    }
+
+    @AuraEnabled
+    public static String saveProfileData(String secureToken, String phone, String dob, String tshirtSize, String shoeSize) {
+        System.debug('Received secure token in saveProfileData: ' + secureToken);
+        System.debug(phone);
+        System.debug(dob);
+        System.debug(tshirtSize);
+        System.debug(shoeSize);
+
+        if (String.isEmpty(secureToken)) {
+            throw new AuraHandledException('Secure token cannot be null or empty');
+        }
+
+        try {
+            // Retrieve the Person Account Id using the token
+            String personAccountId = [
+                SELECT AccountId__c, Expiration__c
+                FROM CustomerToken__c
+                WHERE Token__c = :secureToken
+                LIMIT 1
+            ].AccountId__c;
+
+            System.debug('Decoded Person Account ID for saving: ' + personAccountId);
+
+            // Query Account with required fields
+            Account account = [
+                SELECT Id, Phone, Date_of_Birth__c, T_Shirt_Size__pc, Shoe_Size__pc, RecordTypeId, Profile_Completed__c
+                FROM Account
+                WHERE Id = :personAccountId
+                LIMIT 1
+            ];
+
+            // Update fields if provided
+            if (String.isNotBlank(phone)) {
+                account.Phone = phone;
+            }
+
+            if (String.isNotBlank(dob)) {
+                try {
+                    account.Date_of_Birth__c = Date.valueOf(dob);
+                } catch (Exception e) {
+                    throw new AuraHandledException('Invalid date format: ' + dob);
+                }
+            }
+
+            if (String.isNotBlank(tshirtSize)) {
+                account.T_Shirt_Size__pc = tshirtSize;
+            }
+
+            if (String.isNotBlank(shoeSize)) {
+                try {
+                    account.Shoe_Size__pc = Decimal.valueOf(shoeSize);
+                } catch (Exception e) {
+                    throw new AuraHandledException('Invalid shoe size format: ' + shoeSize);
+                }
+            }
+
+            // Mark Profile Completed as true
+            account.Profile_Completed__c = true;
+
+            // Ensure RecordTypeId is preserved during update
+            if (String.isBlank(account.RecordTypeId)) {
+                throw new AuraHandledException('RecordTypeId is missing on Account. Update failed.');
+            }
+
+            // Save the updated account record
+            update account;
+
+            // Enqueue the Queueable job to make the POST callout
+            System.enqueueJob(new PostCustomerInfo(account.Id));
+
+            return 'Success';
+        } catch (Exception ex) {
+            System.debug('Error in saveProfileData: ' + ex.getMessage());
+            throw new AuraHandledException('Error saving profile data: ' + ex.getMessage());
+        }
+    }
+}

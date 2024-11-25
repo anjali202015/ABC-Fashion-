@@ -1,0 +1,56 @@
+public class SecureTokenHandler {
+
+    // Generate and store a secure token for a Person Account
+    public static String generateSecureToken(Id personAccountId) {
+        if (personAccountId == null) {
+            throw new IllegalArgumentException('Person Account ID cannot be null');
+        }
+
+        // Generate token data
+        String tokenData = personAccountId + '|' + System.currentTimeMillis();
+        String encodedToken = EncodingUtil.base64Encode(Blob.valueOf(tokenData));
+
+        // Remove only '=' at the end of the token
+        while (encodedToken.endsWith('=')) {
+            encodedToken = encodedToken.substring(0, encodedToken.length() - 1);
+        }
+
+        // Save token in the CustomerToken__c object
+        CustomerToken__c tokenRecord = new CustomerToken__c(
+            Token__c = encodedToken,
+            AccountId__c = personAccountId,
+            Expiration__c = System.now().addHours(1) // Token expires in 1 hour
+        );
+        insert tokenRecord;
+
+        System.debug('Generated and saved secure token: ' + encodedToken);
+        return encodedToken;
+    }
+
+    // Decode and validate the secure token
+    public static Id decodeSecureToken(String secureToken) {
+        if (String.isEmpty(secureToken)) {
+            throw new AuraHandledException('Secure token cannot be null or empty');
+        }
+
+        try {
+            // Retrieve token from CustomerToken__c object
+            CustomerToken__c tokenRecord = [
+                SELECT AccountId__c, Expiration__c
+                FROM CustomerToken__c
+                WHERE Token__c = :secureToken
+                LIMIT 1
+            ];
+
+            // Check if the token exists and is not expired
+            if (tokenRecord == null || tokenRecord.Expiration__c < datetime.now()) {
+                throw new AuraHandledException('Invalid or expired token.');
+            }
+
+            return tokenRecord.AccountId__c; // Return associated Account ID
+        } catch (Exception e) {
+            System.debug('Error decoding token: ' + e.getMessage());
+            throw new AuraHandledException('Failed to decode token: ' + e.getMessage());
+        }
+    }
+}

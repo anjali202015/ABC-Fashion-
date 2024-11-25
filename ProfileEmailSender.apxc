@@ -1,0 +1,40 @@
+public class ProfileEmailSender {
+    public static void sendProfileUpdateEmail(Id personAccountId, String customerEmail, String firstName) {
+        // Ensure the email and first name are not empty
+        if (String.isEmpty(customerEmail)) {
+            throw new IllegalArgumentException('Customer email cannot be empty');
+        }
+        if (String.isEmpty(firstName)) {
+            throw new IllegalArgumentException('Customer first name cannot be empty');
+        }
+
+        // Generate secure token for the person account
+        String secureToken = SecureTokenHandler.generateSecureToken(personAccountId);
+        
+        // Create the profile URL with the secure token
+        String profileUrl = 'https://bruntwork-dev-ed.develop.my.site.com/customerprofileportal?token=' + secureToken;
+
+        // Create the email body with the link
+        String emailBody = 'Hello ' + firstName + ',\n\n' +
+            'Welcome to ABC Fashion Co.!\n\n' +
+            'We\'re excited to have you on board. To complete your profile and access exclusive offers, please click the link below:\n\n' +
+            '👉 ' + profileUrl + '\n\n' +
+            'Here’s what you can do once you update your profile:\n' +
+            '- Add your date of birth\n' +
+            '- Select your T-shirt size\n' +
+            '- Choose your shoe size\n' +
+            '- Update your phone number\n\n' +
+            '🔐 Rest assured, your information is safe and secure.\n\n' +
+            'If you have any questions, feel free to contact us at support@abcfashion.com.\n\n' +
+            'Best Regards,\n' +
+            'The ABC Fashion Co. Team';
+
+        // Create and send the email message
+        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+        mail.setToAddresses(new String[] { customerEmail });
+        mail.setSubject('Update Your Profile with ABC Fashion Co.');
+        mail.setPlainTextBody(emailBody);
+        
+        Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+    }
+}

@@ -1,0 +1,61 @@
+.profile-container {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.profile-image {
+    width: 150px;
+    border-radius: 50%;
+    margin-bottom: 20px;
+}
+
+.error-message {
+    color: red;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+.custom-popup {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    width: 20rem;
+    padding: 1rem;
+    z-index: 1000;
+}
+
+.custom-popup-content {
+    position: relative;
+    text-align: center;
+}
+
+.popup-message {
+    font-size: 1rem;
+    color: #333;
+    margin: 1rem 0;
+}
+
+/* Limit the dropdown height to show 4 options and allow scrolling */
+.lightning-combobox .slds-combobox__menu {
+    max-height: 160px; /* Height for about 4 options, adjust based on option height */
+    overflow-y: auto; /* Enable scrolling if more options */
+}
+
+/* Optional: Ensuring that the combobox height stays fixed */
+.lightning-combobox .slds-combobox {
+    height: 3rem; /* You can adjust this value based on the input size */
+}
+
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+}

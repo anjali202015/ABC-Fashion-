@@ -1,0 +1,61 @@
+public class PostCustomerInfo implements Queueable, Database.AllowsCallouts {
+    private Id accountId;
+
+    // Public static method exposed to LWC
+    @AuraEnabled
+    public static void postCustomerInfo(Id accountId) {
+        // Enqueue the job to execute asynchronously
+        System.enqueueJob(new PostCustomerInfo(accountId));
+    }
+
+    // Constructor to initialize the accountId
+    public PostCustomerInfo(Id accountId) {
+        this.accountId = accountId;
+    }
+
+    // Queueable job execution
+    public void execute(QueueableContext context) {
+        try {
+            // Retrieve Account details for the callout
+            Account acc = [
+                SELECT PersonEmail, T_Shirt_Size__pc, Shoe_Size__pc
+                FROM Account
+                WHERE Id = :accountId
+                LIMIT 1
+            ];
+
+            // Prepare the HTTP request
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint('https://integrations.commutatus.com');
+            req.setMethod('POST');
+            req.setHeader('Content-Type', 'application/json');
+
+            // Safely handle null values for JSON payload
+            String email = acc.PersonEmail != null ? acc.PersonEmail : '';
+            String tshirtSize = acc.T_Shirt_Size__pc != null ? acc.T_Shirt_Size__pc : '';
+            String shoeSize = acc.Shoe_Size__pc != null ? String.valueOf(acc.Shoe_Size__pc) : 'null';
+
+            String requestBody = '{"email": "' + email + '", "tshirtSize": "' + tshirtSize + '", "shoeSize": ' + shoeSize + '}';
+            req.setBody(requestBody);
+
+            // Send the HTTP request
+            Http http = new Http();
+            HttpResponse res = http.send(req);
+
+            if (res.getStatusCode() == 200) {
+                // Parse response and update the account with loyalty customer ID
+                Map<String, Object> responseBody = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
+                String customerId = (String) responseBody.get('customer_id');
+
+                if (customerId != null) {
+                    acc.Loyalty_Customer_ID__c = customerId;
+                    update acc;
+                }
+            } else {
+                System.debug('Error response from webhook: ' + res.getBody());
+            }
+        } catch (Exception ex) {
+            System.debug('Exception during callout: ' + ex.getMessage());
+        }
+    }
+}

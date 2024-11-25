@@ -1,0 +1,72 @@
+<template>
+    <div class="profile-container">
+        <img src={imageUrl} alt="Profile" class="profile-image" />
+        <h1 style="font-size: 36px; font-weight: bold;">Update Your Profiles</h1>
+
+        <!-- Error Message Display -->
+        <template if:true={errorMessage}>
+            <div class="error-message">{errorMessage}</div>
+        </template>
+
+        <!-- Phone input field with updated validation -->
+        <lightning-input
+            label="Phone"
+            type="tel"
+            value={phone}
+            data-field="phone"
+            onchange={handleOnChange}
+            message-when-pattern-mismatch="Phone number must be exactly 10 digits in the valid US/Canada format."
+            pattern="^(\+1\s?)?(\(\d{3}\)\s?|\d{3}[\s\-]?)\d{3}[\s\-]?\d{4}$"
+        ></lightning-input>
+
+        <!-- Date of Birth input field -->
+        <lightning-input
+            label="Date of Birth"
+            type="date"
+            value={dob}
+            data-field="dob" 
+            required
+            onchange={handleOnChange}
+        ></lightning-input>
+
+        <!-- T-Shirt Size dropdown -->
+        <lightning-combobox
+            label="T-Shirt Size"
+            options={tshirtSizeOptions}
+            value={tshirtSize}
+            data-field="tshirtSize"
+            required
+            onchange={handleOnChange}
+        ></lightning-combobox>
+
+        <!-- Shoe Size dropdown -->
+        <lightning-combobox
+            label="Shoe Size"
+            options={shoeSizeOptions}
+            value={shoeSize}
+            data-field="shoeSize"
+            required
+            onchange={handleOnChange}
+        ></lightning-combobox>
+
+        <!-- Save button -->
+        <lightning-button
+            label="Save"
+            variant="brand"
+            onclick={handleSave}
+            disabled={isSaveButtonDisabled}
+        ></lightning-button>
+    </div>
+
+    <!-- Modal for success/error messages -->
+    <template if:true={isModalOpen}>
+        <div class="custom-popup">
+            <div class="custom-popup-content">
+                <button class="close-button" title="Close" onclick={closeModal}>
+                    <lightning-icon icon-name="utility:close" alternative-text="Close" size="x-small"></lightning-icon>
+                </button>
+                <p class="popup-message">{modalMessage}</p>
+            </div>
+        </div>
+    </template>
+</template>

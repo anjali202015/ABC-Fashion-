@@ -1,0 +1,11 @@
+trigger AccountTrigger on Account (after update) {
+    for (Account acc : Trigger.new) {
+        Account oldAcc = Trigger.oldMap.get(acc.Id);
+
+        // Check if "Profile Completed" is updated to TRUE
+        if (!oldAcc.Profile_Completed__c && acc.Profile_Completed__c) {
+            // Call the @future method directly, without creating an instance of the class
+            PostCustomerInfo.postCustomerInfo(acc.Id);
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+  "packageDirectories": [
+    {
+      "path": "force-app",
+      "default": true
+    }
+  ],
+  "name": "ABCFashion",
+  "sfdcLoginUrl": "https://login.salesforce.com",
+  "sourceApiVersion": "62.0",
+  "edition": "Enterprise",
+  "features": ["PersonAccounts"],
+  "settings": {
+      "accountSettings": {
+          "enablePersonAccounts": true
+      }
+  }
+}
+

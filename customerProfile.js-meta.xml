@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata" fqn="customerProfile">
+    <apiVersion>58.0</apiVersion> <!-- Update to match your Salesforce API version -->
+    <isExposed>true</isExposed>
+    <masterLabel>Customer Profile</masterLabel>
+    <description>Component to allow customers to update their profile information</description>
+    <targets>
+        <target>lightningCommunity__Page</target>
+        <target>lightning__RecordPage</target>
+        <target>lightning__HomePage</target>
+        <target>lightning__AppPage</target>
+    </targets>
+</LightningComponentBundle>
